@@ -1,79 +1,126 @@
-import React, { useState } from 'react'
-import Sidebar from './components/Sidebar'
-import TopBar from './components/TopBar'
-import UpcomingMatchesPage from './pages/UpcomingMatchesPage'
+import React, { useState } from "react";
+
+import Sidebar from "./components/Sidebar";
+import TopBar from "./components/TopBar";
+
+import PickPlayersPage from "./pages/PickPlayersPage";
+import PickCaptainPage from "./pages/PickCaptainPage";
+import MyTeamsPage from "./pages/MyTeamsPage";
+import UpcomingMatchesPage from "./pages/UpcomingMatchesPage";
 
 export default function App() {
-  const [page, setPage] = useState('MATCHES')
-  const [selectedMatch, setSelectedMatch] = useState(null)
-  const [allUserTeams, setAllUserTeams] = useState([])
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false) 
+  const [pageState, setPageState] = useState({ page: "MATCHES", data: null });
+  const [selectedMatch, setSelectedMatch] = useState(null);
+  const [allUserTeams, setAllUserTeams] = useState([]);
+  const [prefillTeam, setPrefillTeam] = useState(null);
 
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen)
+  // Sidebar state
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const toggleSidebar = () => setSidebarOpen((prev) => !prev);
+
+  // Handlers for saving/deleting teams
+  const handleSaveTeam = (teamObj) => {
+    setAllUserTeams((prev) => [...prev, teamObj]);
+  };
+
+  const handleDeleteTeam = (teamId) => {
+    setAllUserTeams((prev) => prev.filter((t) => t.id !== teamId));
+  };
 
   const renderPage = () => {
+    const page = pageState.page;
+    const data = pageState.data;
+
     switch (page) {
-      case 'MATCHES':
+      case "MATCHES":
         return (
           <UpcomingMatchesPage
             onSelectMatch={(match) => {
-              setSelectedMatch(match)
-              setPage('MY_TEAMS')
+              setSelectedMatch(match);
+              setPageState({ page: "MY_TEAMS", data: null });
             }}
           />
-        )
-      case 'MY_TEAMS':
-        return <div className="p-4 text-gray-700">My Teams Page for: {selectedMatch?.match_name} (Coming soon)</div>
-      case 'COINS':
-        return <div className="p-4 text-gray-700">GamizoCoins Page (Placeholder)</div>
-      case 'REFER':
-        return <div className="p-4 text-gray-700">Refer & Win Page (Placeholder)</div>
-      case 'GAMES':
-        return <div className="p-4 text-gray-700">Games Page (Placeholder)</div>
+        );
+
+      case "MY_TEAMS":
+        return (
+          <MyTeamsPage
+            match={selectedMatch}
+            teams={allUserTeams}
+            onDelete={handleDeleteTeam}
+            setPage={(p) => setPageState({ page: p, data: null })}
+            setSelectedForEdit={(team) => {
+              setPrefillTeam(team);
+              setSelectedMatch(selectedMatch);
+              setPageState({ page: "PICK_PLAYERS", data: null });
+            }}
+          />
+        );
+
+      case "PICK_PLAYERS":
+        return (
+          <PickPlayersPage
+            selectedMatch={selectedMatch}
+            onSaveTeam={handleSaveTeam}
+            setPage={setPageState}
+            prefillTeam={prefillTeam}
+          />
+        );
+
+      case "PICK_CAPTAIN":
+        const players = data?.players || prefillTeam?.players || allUserTeams[0]?.players || [];
+        const match = data?.match || selectedMatch;
+
+        if (!players.length) {
+          return (
+            <div className="p-6 text-center">
+              <p>No players selected. Please pick players first.</p>
+              <button
+                onClick={() => setPageState({ page: "PICK_PLAYERS", data: null })}
+                className="mt-4 px-3 py-2 border rounded"
+              >
+                Go back
+              </button>
+            </div>
+          );
+        }
+
+        return (
+          <PickCaptainPage
+            selectedPlayers={players}
+            selectedMatch={match}
+            onSaveTeam={handleSaveTeam}
+            setPage={setPageState}
+            editingTeam={prefillTeam}
+          />
+        );
 
       default:
         return (
           <UpcomingMatchesPage
             onSelectMatch={(match) => {
-              setSelectedMatch(match)
-              setPage('MY_TEAMS')
+              setSelectedMatch(match);
+              setPageState({ page: "MY_TEAMS", data: null });
             }}
           />
-        )
+        );
     }
-  }
+  };
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      
-      {/* 1. Sidebar Component */}
-      <Sidebar 
-        currentPage={page} 
-        setPage={setPage} 
-        isOpen={isSidebarOpen} 
-        toggleSidebar={toggleSidebar} 
+    <div className="flex">
+      <Sidebar
+        currentPage={pageState.page}
+        setPage={setPageState}
+        isOpen={isSidebarOpen}
+        toggleSidebar={toggleSidebar}
       />
-      
-      {/* 2. Main Content Area */}
-      {/* ml-64 (16rem margin) applied ONLY on desktop (md:) */}
-      <div className="flex-1 flex flex-col "> 
-        
-        {/* Top Bar */}
-        <TopBar toggleSidebar={toggleSidebar} /> 
-        
-        {/* Main Page Content */}
-        <main className="flex-1 overflow-y-auto p-6 bg-gray-100">
-          {renderPage()}
-        </main>
+
+      <div className="flex-1 min-h-screen bg-gray-100 ml-0 md:ml-64">
+        <TopBar toggleSidebar={toggleSidebar} />
+
+        <div className="p-4">{renderPage()}</div>
       </div>
-      
-      {/* 3. Mobile Backdrop Overlay */}
-      {isSidebarOpen && (
-        <div 
-          onClick={toggleSidebar} 
-          className="fixed inset-0 z-10 bg-black opacity-50 md:hidden"
-        ></div>
-      )}
     </div>
-  )
+  );
 }

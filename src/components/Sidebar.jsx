@@ -29,10 +29,14 @@ export default function Sidebar({ currentPage, setPage, isOpen, toggleSidebar })
   return (
     <div 
       // Responsive logic: Slides in/out on mobile, always visible on desktop (md:static)
-      className={`w-64 bg-gray-900 text-white flex flex-col h-screen fixed top-0 left-0 z-50 
-                 md:translate-x-0 transition-transform duration-300 
-                 ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
-                 md:static`}
+     className={`
+  w-64 bg-gray-900 text-white flex flex-col h-screen 
+  fixed md:static top-0 left-0 z-50 
+  transition-transform duration-300
+
+  ${isOpen ? "translate-x-0" : "-translate-x-full"} 
+  md:translate-x-0
+`}
     >
       {/* Logo and Close Button (Mobile Only) */}
       <div className="h-16 flex items-center px-4 bg-black justify-between">
