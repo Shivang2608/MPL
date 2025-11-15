@@ -18,32 +18,32 @@ export default function PickCaptainPage({ selectedPlayers, selectedMatch, onSave
       </div>
     );
   }
-
   const handleSave = () => {
-    if (!captainId || !viceCaptainId) {
-      return alert("Please select both Captain and Vice-Captain.");
-    }
-    if (captainId === viceCaptainId) {
-      return alert("Captain and Vice-Captain cannot be the same player.");
-    }
+  if (!captainId || !viceCaptainId) {
+    return alert("Please select both Captain and Vice-Captain.");
+  }
 
-    const captain = selectedPlayers.find(p => p.id === captainId || p.player_id === captainId);
-    const viceCaptain = selectedPlayers.find(p => p.id === viceCaptainId || p.player_id === viceCaptainId);
+  const captain = selectedPlayers.find(p => p.id === captainId || p.player_id === captainId);
+  const viceCaptain = selectedPlayers.find(p => p.id === viceCaptainId || p.player_id === viceCaptainId);
 
-    const teamObj = {
-      id: editingTeam?.id || `team_${Date.now()}`,
-      players: selectedPlayers,
-      matchId: selectedMatch?.id,
-      createdAt: new Date().toISOString(),
-      creditsLeft: 100 - selectedPlayers.reduce((s, p) => s + Number(p.credit || p.value || p.cost || 0), 0),
-      captain,
-      viceCaptain
-    };
-
-    if (typeof onSaveTeam === "function") onSaveTeam(teamObj);
-    alert("Team saved with Captain & Vice-Captain!");
-    setPage({ page: "MY_TEAMS", data: null });
+  const teamObj = {
+    id: editingTeam?.id || `team_${Date.now()}`,
+    players: selectedPlayers,
+    matchId: selectedMatch?.id,
+    createdAt: new Date().toISOString(),
+    creditsLeft: 100 - selectedPlayers.reduce((s, p) => s + Number(p.credit || p.value || p.cost || 0), 0),
+    captain,
+    viceCaptain
   };
+
+  // Save the team via callback
+  if (typeof onSaveTeam === "function") onSaveTeam(teamObj);
+
+  // Navigate to My Teams page with the new team
+  setPage({ page: "MY_TEAMS", data: teamObj });
+};
+
+ 
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -58,6 +58,12 @@ export default function PickCaptainPage({ selectedPlayers, selectedMatch, onSave
           const role = (player.role || player.position || player.player_role || 'NA');
           const team = player.team || player.team_short || player.team_name || 'TEAM';
 
+          const isCaptain = captainId === id;
+          const isViceCaptain = viceCaptainId === id;
+
+          const optionStyle = "px-2 py-1 rounded cursor-pointer text-sm";
+          const selectedStyle = "bg-red-600 text-white";
+
           return (
             <div key={id} className="p-3 border rounded-lg shadow-sm flex flex-col justify-between">
               <div>
@@ -65,26 +71,21 @@ export default function PickCaptainPage({ selectedPlayers, selectedMatch, onSave
                 <div className="text-xs text-gray-500">{role} • {team}</div>
               </div>
 
-              <div className="mt-2 flex flex-col space-y-1">
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    name="captain"
-                    checked={captainId === id}
-                    onChange={() => setCaptainId(id)}
-                  />
-                  <span className="text-sm">Captain</span>
-                </label>
+              {/* Captain & Vice-Captain horizontal with highlight */}
+              <div className="mt-2 flex items-center justify-between space-x-2">
+                <div
+                  onClick={() => setCaptainId(id)}
+                  className={`${optionStyle} ${isCaptain ? selectedStyle : "border border-gray-300"} ${isViceCaptain ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
+                  Captain
+                </div>
 
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    name="viceCaptain"
-                    checked={viceCaptainId === id}
-                    onChange={() => setViceCaptainId(id)}
-                  />
-                  <span className="text-sm">Vice-Captain</span>
-                </label>
+                <div
+                  onClick={() => setViceCaptainId(id)}
+                  className={`${optionStyle} ${isViceCaptain ? selectedStyle : "border border-gray-300"} ${isCaptain ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
+                  Vice-Captain
+                </div>
               </div>
             </div>
           );

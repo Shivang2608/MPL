@@ -94,32 +94,44 @@ export default function UpcomingMatchesPage({ onSelectMatch }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  useEffect(() => {
-    const fetchMatches = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch(API_URLS.matches);
-        if (!res.ok) throw new Error('Network response was not ok');
-        const data = await res.json();
-        
-        const matchesArray = Object.keys(data).map(key => ({
-          id: key,
-          team_a_name: data[key].team_a, 
-          team_b_name: data[key].team_b, 
-          ...data[key]
-        }));
-        
-        setMatches(matchesArray);
-      } catch (e) { // <-- This is the fixed line!
-        setError('Failed to fetch matches. Please try again.');
-        console.error(e);
-      }
-      setLoading(false);
-    };
+useEffect(() => {
+  const fetchMatches = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(API_URLS.matches);
+      if (!res.ok) throw new Error('Network response was not ok');
+      const data = await res.json();
 
-    fetchMatches();
-  }, []);
+      // Check if cricket matches exist
+      const cricketMatches = data?.matches?.cricket || [];
+
+      // Map to a consistent object shape
+      const matchesArray = cricketMatches.map(m => ({
+        id: m.id,
+        match_name: m.match_name,
+        team_a_name: m.t1_name,
+        team_b_name: m.t2_name,
+        team_a_short: m.t1_short_name,
+        team_b_short: m.t2_short_name,
+        team_a_logo: m.t1_image,
+        team_b_logo: m.t2_image,
+        start_date: m.match_date,
+        match_type: m.match_type,
+      }));
+
+      setMatches(matchesArray);
+    } catch (e) {
+      setError('Failed to fetch matches. Please try again.');
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchMatches();
+}, []);
+
 
   return (
     <div className="w-full max-w-7xl mx-auto">

@@ -46,13 +46,16 @@ export default function App() {
         return (
           <MyTeamsPage
             match={selectedMatch}
-            teams={allUserTeams}
+            myTeams={allUserTeams}
             onDelete={handleDeleteTeam}
-            setPage={(p) => setPageState({ page: p, data: null })}
+            setPage={(pageObj) => setPageState(pageObj)} // FIXED
             setSelectedForEdit={(team) => {
               setPrefillTeam(team);
               setSelectedMatch(selectedMatch);
-              setPageState({ page: "PICK_PLAYERS", data: null });
+              setPageState({
+                page: "PICK_PLAYERS",
+                data: { selectedMatch, editingTeam: team },
+              });
             }}
           />
         );
@@ -60,7 +63,8 @@ export default function App() {
       case "PICK_PLAYERS":
         return (
           <PickPlayersPage
-            selectedMatch={selectedMatch}
+            selectedMatch={data?.selectedMatch || selectedMatch}
+            contest={data?.contest || null}
             onSaveTeam={handleSaveTeam}
             setPage={setPageState}
             prefillTeam={prefillTeam}
@@ -68,7 +72,8 @@ export default function App() {
         );
 
       case "PICK_CAPTAIN":
-        const players = data?.players || prefillTeam?.players || allUserTeams[0]?.players || [];
+        const players =
+          data?.players || prefillTeam?.players || allUserTeams[0]?.players || [];
         const match = data?.match || selectedMatch;
 
         if (!players.length) {
