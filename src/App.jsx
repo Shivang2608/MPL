@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// src/App.jsx
+import React, { useState, useEffect } from "react";
 
 import Sidebar from "./components/Sidebar";
 import TopBar from "./components/TopBar";
@@ -11,20 +12,50 @@ import UpcomingMatchesPage from "./pages/UpcomingMatchesPage";
 export default function App() {
   const [pageState, setPageState] = useState({ page: "MATCHES", data: null });
   const [selectedMatch, setSelectedMatch] = useState(null);
+
+  // -------------------------------
+  // 🟢 Load saved teams from localStorage
+  // -------------------------------
   const [allUserTeams, setAllUserTeams] = useState([]);
+
+  useEffect(() => {
+    const savedTeams = localStorage.getItem("allUserTeams");
+    if (savedTeams) {
+      setAllUserTeams(JSON.parse(savedTeams));
+    }
+  }, []);
+
+  // 🟢 Save teams to localStorage on every update
+  useEffect(() => {
+    localStorage.setItem("allUserTeams", JSON.stringify(allUserTeams));
+  }, [allUserTeams]);
+
   const [prefillTeam, setPrefillTeam] = useState(null);
 
   // Sidebar state
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
-  // Handlers for saving/deleting teams
+  // -------------------------------
+  // 🟢 Save Team
+  // -------------------------------
   const handleSaveTeam = (teamObj) => {
-    setAllUserTeams((prev) => [...prev, teamObj]);
+    setAllUserTeams((prev) => {
+      const updated = [...prev, teamObj];
+      localStorage.setItem("allUserTeams", JSON.stringify(updated)); // Save to storage
+      return updated;
+    });
   };
 
+  // -------------------------------
+  // 🟢 Delete Team
+  // -------------------------------
   const handleDeleteTeam = (teamId) => {
-    setAllUserTeams((prev) => prev.filter((t) => t.id !== teamId));
+    setAllUserTeams((prev) => {
+      const updated = prev.filter((t) => t.id !== teamId);
+      localStorage.setItem("allUserTeams", JSON.stringify(updated)); // Save to storage
+      return updated;
+    });
   };
 
   const renderPage = () => {
@@ -47,15 +78,11 @@ export default function App() {
           <MyTeamsPage
             match={selectedMatch}
             myTeams={allUserTeams}
-            onDelete={handleDeleteTeam}
-            setPage={(pageObj) => setPageState(pageObj)} // FIXED
+            setPage={setPageState}
             setSelectedForEdit={(team) => {
               setPrefillTeam(team);
               setSelectedMatch(selectedMatch);
-              setPageState({
-                page: "PICK_PLAYERS",
-                data: { selectedMatch, editingTeam: team },
-              });
+              setPageState({ page: "PICK_PLAYERS", data: null });
             }}
           />
         );
@@ -63,8 +90,7 @@ export default function App() {
       case "PICK_PLAYERS":
         return (
           <PickPlayersPage
-            selectedMatch={data?.selectedMatch || selectedMatch}
-            contest={data?.contest || null}
+            selectedMatch={selectedMatch}
             onSaveTeam={handleSaveTeam}
             setPage={setPageState}
             prefillTeam={prefillTeam}
@@ -73,7 +99,11 @@ export default function App() {
 
       case "PICK_CAPTAIN":
         const players =
-          data?.players || prefillTeam?.players || allUserTeams[0]?.players || [];
+          data?.players ||
+          prefillTeam?.players ||
+          allUserTeams[0]?.players ||
+          [];
+
         const match = data?.match || selectedMatch;
 
         if (!players.length) {
@@ -81,7 +111,9 @@ export default function App() {
             <div className="p-6 text-center">
               <p>No players selected. Please pick players first.</p>
               <button
-                onClick={() => setPageState({ page: "PICK_PLAYERS", data: null })}
+                onClick={() =>
+                  setPageState({ page: "PICK_PLAYERS", data: null })
+                }
                 className="mt-4 px-3 py-2 border rounded"
               >
                 Go back
@@ -113,7 +145,8 @@ export default function App() {
   };
 
   return (
-    <div className="flex">
+    <div className="flex h-screen overflow-hidden">
+      {/* Sidebar */}
       <Sidebar
         currentPage={pageState.page}
         setPage={setPageState}
@@ -121,10 +154,13 @@ export default function App() {
         toggleSidebar={toggleSidebar}
       />
 
-      <div className="flex-1 min-h-screen bg-gray-100 ml-0 md:ml-64">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-h-screen bg-gray-100 relative mx-4">
+        {/* TopBar */}
         <TopBar toggleSidebar={toggleSidebar} />
 
-        <div className="p-4">{renderPage()}</div>
+        {/* Page Content */}
+        <div className="flex-1 overflow-hidden">{renderPage()}</div>
       </div>
     </div>
   );

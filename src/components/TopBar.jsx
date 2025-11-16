@@ -29,7 +29,7 @@ export default function TopBar({ toggleSidebar }) {
 
       {/* Placeholder for center logo on mobile */}
       <div className="md:hidden">
-         <h1 className="text-xl font-bold text-red-500">GAMIZO <span className="text-gray-800 text-base">11</span></h1>
+         <h1 className="text-xl font-bold text-red-500">APNATEAM <span className="text-gray-800 text-base">11</span></h1>
       </div>
 
       <div className="flex items-center space-x-6">

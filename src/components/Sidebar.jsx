@@ -21,7 +21,6 @@ export default function Sidebar({ currentPage, setPage, isOpen, toggleSidebar })
   const menuItems = [
     { name: 'Home', icon: HomeIcon, page: 'MATCHES' },
     { name: 'My Matches', icon: TrophyIcon, page: 'MY_TEAMS' },
-    { name: 'GamizoCoins', icon: CoinIcon, page: 'COINS' },
     { name: 'Refer & Win', icon: GiftIcon, page: 'REFER' },
     { name: 'Games', icon: TrophyIcon, page: 'GAMES' },
   ];
@@ -40,7 +39,7 @@ export default function Sidebar({ currentPage, setPage, isOpen, toggleSidebar })
     >
       {/* Logo and Close Button (Mobile Only) */}
       <div className="h-16 flex items-center px-4 bg-black justify-between">
-        <h1 className="text-2xl font-bold text-red-500">GAMIZO <span className="text-white text-base">11</span></h1>
+        <h1 className="text-2xl font-bold text-red-500">APNATEAM <span className="text-white text-base">11</span></h1>
         
         {/* Close Button on Mobile */}
         <button 

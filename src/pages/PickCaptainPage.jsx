@@ -18,45 +18,45 @@ export default function PickCaptainPage({ selectedPlayers, selectedMatch, onSave
       </div>
     );
   }
+
   const handleSave = () => {
-  if (!captainId || !viceCaptainId) {
-    return alert("Please select both Captain and Vice-Captain.");
-  }
+    if (!captainId || !viceCaptainId) {
+      return alert("Please select both Captain and Vice-Captain.");
+    }
 
-  const captain = selectedPlayers.find(p => p.id === captainId || p.player_id === captainId);
-  const viceCaptain = selectedPlayers.find(p => p.id === viceCaptainId || p.player_id === viceCaptainId);
+    const captain = selectedPlayers.find(p => p.id === captainId || p.player_id === captainId);
+    const viceCaptain = selectedPlayers.find(p => p.id === viceCaptainId || p.player_id === viceCaptainId);
 
-  const teamObj = {
-    id: editingTeam?.id || `team_${Date.now()}`,
-    players: selectedPlayers,
-    matchId: selectedMatch?.id,
-    createdAt: new Date().toISOString(),
-    creditsLeft: 100 - selectedPlayers.reduce((s, p) => s + Number(p.credit || p.value || p.cost || 0), 0),
-    captain,
-    viceCaptain
+    const teamObj = {
+      id: editingTeam?.id || `team_${Date.now()}`,
+      players: selectedPlayers,
+      matchId: selectedMatch?.id,
+      createdAt: new Date().toISOString(),
+      creditsLeft: 100 - selectedPlayers.reduce((s, p) => s + Number(p.credit || p.value || p.cost || 0), 0),
+      captain,
+      viceCaptain
+    };
+
+    if (typeof onSaveTeam === "function") onSaveTeam(teamObj);
+
+    setPage({ page: "MY_TEAMS", data: teamObj });
   };
 
-  // Save the team via callback
-  if (typeof onSaveTeam === "function") onSaveTeam(teamObj);
-
-  // Navigate to My Teams page with the new team
-  setPage({ page: "MY_TEAMS", data: teamObj });
-};
-
- 
-
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto pb-24">
+
       <h2 className="text-2xl font-bold mb-4">
-        Pick Captain & Vice-Captain — {selectedMatch?.match_name || selectedMatch?.team_a_short + ' vs ' + selectedMatch?.team_b_short}
+        Pick Captain & Vice-Captain —{" "}
+        {selectedMatch?.match_name ||
+          `${selectedMatch?.team_a_short} vs ${selectedMatch?.team_b_short}`}
       </h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
         {selectedPlayers.map(player => {
           const id = player.id || player.player_id;
           const name = player.player_name || player.name || player.player_full_name || `Player ${id}`;
-          const role = (player.role || player.position || player.player_role || 'NA');
-          const team = player.team || player.team_short || player.team_name || 'TEAM';
+          const role = player.role || player.position || player.player_role || "NA";
+          const team = player.team || player.team_short || player.team_name || "TEAM";
 
           const isCaptain = captainId === id;
           const isViceCaptain = viceCaptainId === id;
@@ -71,18 +71,21 @@ export default function PickCaptainPage({ selectedPlayers, selectedMatch, onSave
                 <div className="text-xs text-gray-500">{role} • {team}</div>
               </div>
 
-              {/* Captain & Vice-Captain horizontal with highlight */}
               <div className="mt-2 flex items-center justify-between space-x-2">
                 <div
                   onClick={() => setCaptainId(id)}
-                  className={`${optionStyle} ${isCaptain ? selectedStyle : "border border-gray-300"} ${isViceCaptain ? "opacity-50 cursor-not-allowed" : ""}`}
+                  className={`${optionStyle} ${
+                    isCaptain ? selectedStyle : "border border-gray-300"
+                  } ${isViceCaptain ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   Captain
                 </div>
 
                 <div
                   onClick={() => setViceCaptainId(id)}
-                  className={`${optionStyle} ${isViceCaptain ? selectedStyle : "border border-gray-300"} ${isCaptain ? "opacity-50 cursor-not-allowed" : ""}`}
+                  className={`${optionStyle} ${
+                    isViceCaptain ? selectedStyle : "border border-gray-300"
+                  } ${isCaptain ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   Vice-Captain
                 </div>
@@ -92,9 +95,15 @@ export default function PickCaptainPage({ selectedPlayers, selectedMatch, onSave
         })}
       </div>
 
-      <div className="mt-6 flex space-x-3">
+      {/* DESKTOP BUTTONS */}
+      <div className="hidden md:flex mt-6 space-x-3">
         <button
-          onClick={() => setPage({ page: "PICK_PLAYERS", data: { players: selectedPlayers, match: selectedMatch } })}
+          onClick={() =>
+            setPage({
+              page: "PICK_PLAYERS",
+              data: { players: selectedPlayers, match: selectedMatch }
+            })
+          }
           className="px-4 py-2 border rounded text-sm"
         >
           Back
@@ -107,6 +116,29 @@ export default function PickCaptainPage({ selectedPlayers, selectedMatch, onSave
           Save Team
         </button>
       </div>
+
+      {/* MOBILE STICKY BOTTOM BUTTONS */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-3 z-50 md:hidden flex gap-3">
+        <button
+          onClick={() =>
+            setPage({
+              page: "PICK_PLAYERS",
+              data: { players: selectedPlayers, match: selectedMatch }
+            })
+          }
+          className="flex-1 px-4 py-2 border rounded text-sm"
+        >
+          Back
+        </button>
+
+        <button
+          onClick={handleSave}
+          className="flex-1 px-4 py-2 bg-red-600 text-white rounded text-sm font-semibold"
+        >
+          Save Team
+        </button>
+      </div>
+
     </div>
   );
 }
