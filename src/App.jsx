@@ -9,6 +9,14 @@ import PickCaptainPage from "./pages/PickCaptainPage";
 import MyTeamsPage from "./pages/MyTeamsPage";
 import UpcomingMatchesPage from "./pages/UpcomingMatchesPage";
 
+// ✅ New NotAvailablePage component
+const NotAvailablePage = ({ title, message }) => (
+  <div className="flex flex-col items-center justify-center h-full text-center p-6">
+    <h2 className="text-3xl font-bold text-gray-800 mb-4">{title}</h2>
+    <p className="text-gray-600">{message}</p>
+  </div>
+);
+
 export default function App() {
   // -------------------------------
   // 🔴 PAGE + DATA STATE
@@ -162,6 +170,9 @@ export default function App() {
           />
         );
 
+      case "NOT_AVAILABLE":
+        return <NotAvailablePage title={data?.title} message={data?.message} />;
+
       default:
         return (
           <UpcomingMatchesPage
@@ -187,9 +198,9 @@ export default function App() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-screen bg-gray-100 relative mx-4">
-  <TopBar toggleSidebar={toggleSidebar} />
-  <div className="flex-1 overflow-y-auto no-scrollbar">{renderPage()}</div>
-</div>
+        <TopBar toggleSidebar={toggleSidebar} />
+        <div className="flex-1 overflow-y-auto no-scrollbar">{renderPage()}</div>
+      </div>
     </div>
   );
 }

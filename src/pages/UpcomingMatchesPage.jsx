@@ -64,6 +64,7 @@ const MatchCard = ({ match, onSelect }) => {
         <img
           src={match.team_a_logo}
           className="w-8 h-8 object-contain"
+          style={{ filter: match.team_a_filter }}
           onError={(e) => (e.target.src = `${PLACEHOLDER_IMG}${match.team_a_short}`)}
         />
         <span className="font-semibold text-gray-800">{match.team_a_name}</span>
@@ -73,6 +74,7 @@ const MatchCard = ({ match, onSelect }) => {
         <img
           src={match.team_b_logo}
           className="w-8 h-8 object-contain"
+          style={{ filter: match.team_b_filter }}
           onError={(e) => (e.target.src = `${PLACEHOLDER_IMG}${match.team_b_short}`)}
         />
         <span className="font-semibold text-gray-800">{match.team_b_name}</span>
@@ -94,14 +96,22 @@ export default function UpcomingMatchesPage({ onSelectMatch }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Slideshow state
   const [slide, setSlide] = useState(0);
 
-  // Auto slide every 3 seconds
+  const TEAM_NAMES = [
+    { name: "Adelaide Strikers", short: "AS" },
+    { name: "Brisbane Heat", short: "BH" },
+    { name: "Hobart Hurricanes", short: "HH" },
+    { name: "Melbourne Renegades", short: "MR" },
+    { name: "Melbourne Stars", short: "MS" },
+    { name: "Perth Scorchers", short: "PS" },
+    { name: "Sydney Sixers", short: "SS" },
+    { name: "Sydney Thunder", short: "ST" }
+  ];
+
+  // Slideshow auto
   useEffect(() => {
-    const interval = setInterval(() => {
-      setSlide((prev) => (prev + 1) % BANNERS.length);
-    }, 3000);
+    const interval = setInterval(() => setSlide(prev => (prev + 1) % BANNERS.length), 3000);
     return () => clearInterval(interval);
   }, []);
 
@@ -115,12 +125,11 @@ export default function UpcomingMatchesPage({ onSelectMatch }) {
         const data = await res.json();
         const apiMatches = data?.matches?.cricket || [];
 
-        if (apiMatches.length === 0) {
+        if (!apiMatches.length) {
           setMatches([]);
           return;
         }
 
-        // Format the original API match
         const base = apiMatches.map((m) => ({
           id: m.id,
           match_name: m.match_name,
@@ -133,15 +142,34 @@ export default function UpcomingMatchesPage({ onSelectMatch }) {
           start_date: m.match_date,
         }))[0];
 
-        // Duplicate the match into 10 unique matches
-        const generatedMatches = Array.from({ length: 10 }).map((_, i) => ({
-          ...base,
-          id: `${base.id}-${i + 1}`,
-          match_name: `${base.team_a_short} vs ${base.team_b_short} • Match ${i + 1}`,
-          team_a_name: base.team_a_name + (i % 2 === 0 ? " Stars" : " Warriors"),
-          team_b_name: base.team_b_name + (i % 3 === 0 ? " Titans" : " Kings"),
-          start_date: new Date(Date.now() + i * 3600_000).toISOString(),
-        }));
+        const generatedMatches = Array.from({ length: 10 }).map((_, i) => {
+          const teamA = TEAM_NAMES[i % TEAM_NAMES.length];
+          const teamB = TEAM_NAMES[(i + 1) % TEAM_NAMES.length];
+
+          // Original logos for all, but apply filter for color change
+          const filters = [
+            "hue-rotate(0deg)",
+            "hue-rotate(60deg)",
+            "hue-rotate(120deg)",
+            "hue-rotate(180deg)",
+            "hue-rotate(240deg)",
+            "hue-rotate(300deg)"
+          ];
+
+          return {
+            id: `${base.id}-${i + 1}`,
+            match_name: `${teamA.name} vs ${teamB.name}`,
+            team_a_name: teamA.name,
+            team_b_name: teamB.name,
+            team_a_short: teamA.short,
+            team_b_short: teamB.short,
+            team_a_logo: base.team_a_logo,
+            team_b_logo: base.team_b_logo,
+            team_a_filter: filters[i % filters.length],
+            team_b_filter: filters[(i + 1) % filters.length],
+            start_date: new Date(Date.now() + i * 2 * 3600_000).toISOString(), // 2 hours apart
+          };
+        });
 
         setMatches(generatedMatches);
       } catch (err) {
@@ -157,31 +185,16 @@ export default function UpcomingMatchesPage({ onSelectMatch }) {
   return (
     <div className="w-full max-w-7xl mx-auto">
 
-      {/* 🔥 SLIDESHOW BANNER */}
-      <div className="relative w-full h-56 md:h-64 overflow-hidden rounded-xl shadow-lg mb-6">
-        <div
-          className="flex transition-transform duration-700"
-          style={{ transform: `translateX(-${slide * 100}%)` }}
-        >
+      <div className="relative w-full h-56 md:h-56 overflow-hidden rounded-xl shadow-lg mb-6">
+        <div className="flex transition-transform duration-600" style={{ transform: `translateX(-${slide * 100}%)` }}>
           {BANNERS.map((img, i) => (
-            <img
-              key={i}
-              src={img}
-              className="w-full flex-shrink-0 h-56 md:h-64 object-cover"
-            />
+            <img key={i} src={img} className="w-full flex-shrink-0 h-56 md:h-64 object-cover" />
           ))}
         </div>
 
-        {/* Dots */}
         <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-2">
           {BANNERS.map((_, i) => (
-            <div
-              key={i}
-              onClick={() => setSlide(i)}
-              className={`w-3 h-3 rounded-full cursor-pointer transition-all ${
-                slide === i ? "bg-white scale-125" : "bg-gray-400 opacity-70"
-              }`}
-            />
+            <div key={i} onClick={() => setSlide(i)} className={`w-3 h-3 rounded-full cursor-pointer transition-all ${slide === i ? "bg-white scale-125" : "bg-gray-400 opacity-70"}`} />
           ))}
         </div>
       </div>
@@ -192,11 +205,9 @@ export default function UpcomingMatchesPage({ onSelectMatch }) {
         {loading && <LoadingSpinner />}
         {error && <ErrorMessage message={error} />}
 
-        {!loading &&
-          !error &&
-          matches.map((match) => (
-            <MatchCard key={match.id} match={match} onSelect={onSelectMatch} />
-          ))}
+        {!loading && !error && matches.map((match) => (
+          <MatchCard key={match.id} match={match} onSelect={onSelectMatch} />
+        ))}
       </div>
     </div>
   );
